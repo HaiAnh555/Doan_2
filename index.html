@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Smart Parking by Nhóm 25</title>
+
+<style>
+:root{
+  --bg:#a2afaf;
+  --card:#fff;
+  --border:#d1d5db;
+  --text:#22223b;
+  --muted:#6b7280;
+  --accent:#2563eb;
+  --accent2:#fbbf24;
+  --shadow:0 4px 24px 0 rgba(37,99,235,0.08);
+}
+
+body{
+  margin:0;
+  font-family:'Segoe UI',Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+}
+
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:20px;
+  animation:fadein 1.2s;
+}
+@keyframes fadein {
+  from { opacity:0; transform:translateY(30px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ===== TOP STATS ===== */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+  margin-bottom:16px;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:20px 16px 16px 16px;
+  box-shadow:var(--shadow);
+  position:relative;
+  overflow:hidden;
+  transition:transform .2s,box-shadow .2s;
+}
+.card:hover{
+  transform:translateY(-4px) scale(1.03);
+  box-shadow:0 8px 32px 0 rgba(37,99,235,0.18);
+}
+.label{ color:var(--muted); font-size:15px; letter-spacing:1px; }
+.value{
+  font-size:38px;
+  font-weight:bold;
+  margin-top:6px;
+  color:var(--accent);
+  text-shadow:0 2px 8px #2563eb22;
+}
+
+/* ===== SLOT STATUS ===== */
+.slot-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:16px;
+  margin-bottom:20px;
+}
+
+.slot-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-weight:bold;
+  box-shadow:var(--shadow);
+  transition:transform .2s,box-shadow .2s;
+  color:var(--accent);
+}
+.slot-card:hover{
+  transform:scale(1.04);
+  box-shadow:0 8px 32px 0 #fbbf2444;
+  color:var(--accent2);
+}
+
+.led{
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:#e5e7eb;        /* TẮT */
+  border:2px solid #d1d5db;
+  transition:box-shadow .2s,background .2s;
+}
+
+/* LED ON */
+.led.on.red   { background:#ef4444; box-shadow:0 0 16px #ef4444; border-color:#ef4444; }
+.led.on.blue  { background:#3b82f6; box-shadow:0 0 16px #3b82f6; border-color:#3b82f6; }
+.led.on.green { background:#22c55e; box-shadow:0 0 16px #22c55e; border-color:#22c55e; }
+.led.on.pink  { background:#d946ef; box-shadow:0 0 16px #d946ef; border-color:#d946ef; }
+
+/* ===== TABLE ===== */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:var(--card);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+  margin-top:10px;
+}
+th,td{
+  padding:12px 10px;
+  border-bottom:1px solid var(--border);
+  text-align:center;
+  font-size:16px;
+  transition:background .2s;
+}
+th{ background:var(--accent); color:#fff; font-size:16px; }
+tr:hover td{ background:#f3f4f6; }
+.in{ color:#22c55e; font-weight:bold; }
+.out{ color:#ef4444; font-weight:bold; }
+.money{ color:#f59e42; font-weight:bold; }
+#pagination button{
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  padding:6px 14px;
+  margin:0 2px;
+  font-size:15px;
+  cursor:pointer;
+  transition:background .2s,transform .2s;
+}
+#pagination button[style*="font-weight:bold"]{
+  background:var(--accent2);
+  color:#fff;
+  transform:scale(1.08);
+}
+#pagination button:hover{
+  background:#1d4ed8;
+  color:#fff;
+  transform:scale(1.08);
+}
+</style>
+<!-- Hiệu ứng tuyết rơi Noel -->
+<style>
+.snowflake {
+  position: fixed;
+  top: -40px;
+  color: #fff;
+  font-size: 1.2em;
+  pointer-events: none;
+  z-index: 9999;
+  user-select: none;
+  text-shadow: 0 0 8px #fff, 0 0 12px #b3e0ff;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <h2 style="color:var(--accent);text-shadow:0 2px 12px #2563eb22;">🚗 Smart Parking by Nhóm 25</h2>
+
+  <!-- ===== STATS ===== -->
+  <div class="stats">
+    <div class="card">
+      <div class="label">Xe vào (hôm nay)</div>
+      <div class="value" id="cntIn">0</div>
+    </div>
+    <div class="card">
+      <div class="label">Xe ra (hôm nay)</div>
+      <div class="value" id="cntOut">0</div>
+    </div>
+    <div class="card">
+      <div class="label">Chỗ trống hiện tại</div>
+      <div class="value" id="freeNow">-</div>
+    </div>
+    <div class="card">
+      <div class="label">Tổng tiền hôm nay</div>
+      <div class="value" id="totalMoney">
+        {{ total_money if total_money is defined else 0 }} VNĐ
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLOT STATUS ===== -->
+  <div class="slot-grid">
+    <div class="slot-card">SLOT 1 <div id="led1" class="led"></div></div>
+    <div class="slot-card">SLOT 2 <div id="led2" class="led"></div></div>
+    <div class="slot-card">SLOT 3 <div id="led3" class="led"></div></div>
+    <div class="slot-card">SLOT 4 <div id="led4" class="led"></div></div>
+  </div>
+
+  <!-- ===== HISTORY ===== -->
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>STT</th>
+          <th>Thời gian</th>
+          <th>UID</th>
+          <th>Trạng thái</th>
+          <th>Phút</th>
+          <th>Số tiền</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div id="pagination" style="margin:16px 0; text-align:center;"></div>
+  </div>
+
+</div>
+
+<script>
+const rows = document.getElementById("rows");
+const cntIn = document.getElementById("cntIn");
+const cntOut = document.getElementById("cntOut");
+const freeNow = document.getElementById("freeNow");
+const pagination = document.getElementById("pagination");
+
+let inToday = 0, outToday = 0;
+let allData = [];
+let currentPage = 1;
+const pageSize = 20;
+
+/* ===== SLOT ===== */
+function setLed(id, val, color){
+  const el = document.getElementById(id);
+  el.className = "led";
+  if(val === 1) el.classList.add("on", color);
+}
+function updateSlots(e){
+  setLed("led1", e.slot1, "red");
+  setLed("led2", e.slot2, "blue");
+  setLed("led3", e.slot3, "green");
+  setLed("led4", e.slot4, "pink");
+}
+
+/* ===== HISTORY ===== */
+function formatDate(ts) {
+  const d = new Date(ts);
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  return `${dd}/${mm}/${yyyy} ${h}:${m}:${s}`;
+}
+
+function addRow(e, idx){
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${idx+1}</td>
+    <td>${formatDate(e.ts)}</td>
+    <td>${e.uid}</td>
+    <td class="${e.action==='IN'?'in':'out'}">${e.action}</td>
+    <td>${e.minutes}</td>
+    <td class="money">${formatMoneyVND(e.money)}</td>
+  `;
+  return tr;
+}
+
+function isToday(ts){
+  const d = new Date(ts), n = new Date();
+  return d.getDate()===n.getDate() &&
+         d.getMonth()===n.getMonth() &&
+         d.getFullYear()===n.getFullYear();
+}
+
+let totalMoney = parseInt(document.getElementById("totalMoney").textContent) || 0;
+
+function formatMoneyVND(money) {
+  let s = money.toString();
+  let out = '';
+  let cnt = 0;
+  for (let i = s.length - 1; i >= 0; i--) {
+    out = s[i] + out;
+    cnt++;
+    if (cnt % 3 === 0 && i !== 0) out = '.' + out;
+  }
+  return out + ' VNĐ';
+}
+
+function recalcTotalMoney() {
+  // Tính lại tổng tiền hôm nay từ allData (chỉ OUT, cùng ngày)
+  const today = new Date();
+  let sum = 0;
+  allData.forEach(e => {
+    const d = new Date(e.ts);
+    if (
+      e.action === "OUT" &&
+      d.getDate() === today.getDate() &&
+      d.getMonth() === today.getMonth() &&
+      d.getFullYear() === today.getFullYear()
+    ) {
+      sum += Number(e.money) || 0;
+    }
+  });
+  document.getElementById("totalMoney").textContent = formatMoneyVND(sum);
+  totalMoney = sum;
+}
+
+/* PAGINATION */
+function renderTable(page=1){
+  rows.innerHTML = "";
+  const start = (page-1)*pageSize;
+  const end = start+pageSize;
+  allData.slice(start, end).forEach((e, i)=>{
+    rows.appendChild(addRow(e, start + i));
+  });
+  renderPagination();
+  recalcTotalMoney();
+}
+
+function renderPagination(){
+  const totalPages = Math.ceil(allData.length/pageSize);
+  let html = '';
+  if(totalPages <= 1) { pagination.innerHTML = ""; return; }
+  if(currentPage > 1)
+    html += `<button onclick="gotoPage(${currentPage-1})">&lt;</button>`;
+  for(let i=1; i<=totalPages; i++){
+    html += `<button onclick="gotoPage(${i})" style="margin:0 2px;${i===currentPage?'font-weight:bold;background:#fbbf24;color:#fff;':''}">${i}</button>`;
+  }
+  if(currentPage < totalPages)
+    html += `<button onclick="gotoPage(${currentPage+1})">&gt;</button>`;
+  pagination.innerHTML = html;
+}
+
+window.gotoPage = function(page){
+  currentPage = page;
+  renderTable(page);
+};
+
+/* LOAD HISTORY */
+fetch("/api/events")
+  .then(r=>r.json())
+  .then(data=>{
+    allData = data.reverse(); // Đảo ngược để mới nhất lên đầu
+    data.forEach(e=>{
+      updateSlots(e);
+      freeNow.textContent = e.free;
+      if(isToday(e.ts)){
+        if(e.action==="IN") inToday++;
+        if(e.action==="OUT") outToday++;
+      }
+    });
+    cntIn.textContent = inToday;
+    cntOut.textContent = outToday;
+    renderTable(1);
+    recalcTotalMoney();
+  });
+
+/* REALTIME */
+const ws = new WebSocket("ws://" + location.host + "/ws");
+ws.onmessage = (msg)=>{
+  const p = JSON.parse(msg.data);
+  if(p.type==="event:new"){
+    allData.unshift(p.data);
+    renderTable(1);
+    updateSlots(p.data);
+    freeNow.textContent = p.data.free;
+    if(p.data.action==="IN") cntIn.textContent = ++inToday;
+    if(p.data.action==="OUT") cntOut.textContent = ++outToday;
+    recalcTotalMoney();
+  }
+};
+// Hiệu ứng tuyết rơi Noel
+function createSnowflake() {
+  const snowflake = document.createElement('span');
+  snowflake.className = 'snowflake';
+  snowflake.textContent = '❄';
+  snowflake.style.left = Math.random() * 100 + 'vw';
+  snowflake.style.fontSize = (Math.random() * 16 + 12) + 'px';
+  snowflake.style.opacity = Math.random() * 0.7 + 0.3;
+  document.body.appendChild(snowflake);
+  const duration = Math.random() * 3 + 4;
+  snowflake.animate([
+    { transform: `translateY(0px)` },
+    { transform: `translateY(${window.innerHeight + 40}px)` }
+  ], {
+    duration: duration * 1000,
+    easing: 'linear',
+  });
+  setTimeout(() => snowflake.remove(), duration * 1000);
+}
+setInterval(createSnowflake, 250);
+</script>
+
+</body>
+</html>
