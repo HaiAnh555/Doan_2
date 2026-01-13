@@ -433,7 +433,15 @@ void loop() {
 
       if (idx == -1) {
         // THẺ VÀO
-        if (addUID(uidText)) {
+        // Kiểm tra bãi đã đầy chưa
+        if (s1 && s2 && s3 && s4) {
+          // Bãi đầy, không mở cổng, còi kêu 3 bíp, LCD: Da het cho
+          beepStart(3, 150, 350); // 3 bíp trong 1.5s
+          printPadded(0, 0, uidText);
+          printPadded(0, 1, "Da het cho");
+          showingMsg = true;
+          msgUntil = millis() + MSG_MS;
+        } else if (addUID(uidText)) {
           beepStart(2, 80, 60);
           sendEvent(uidText, "IN", 0, 0);
           screenCardMsg(uidText, "Welcome");
