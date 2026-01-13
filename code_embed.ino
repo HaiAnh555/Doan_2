@@ -14,11 +14,11 @@
 #include <MFRC522.h>
 #include <ESP32Servo.h>
 
-#define SERVER_URL "http://192.168.100.149:8000/api/event"
+#define SERVER_URL "http://172.20.10.2:8000/api/event"
 
 /************* WIFI *************/
-#define WIFI_SSID "Anh_Thư"
-#define WIFI_PASS "anhthu2021"
+#define WIFI_SSID "meomoccute"
+#define WIFI_PASS "johnbeo55"
 
 /************* LCD *************/
 #define LCD_ADDR 0x27
@@ -407,10 +407,10 @@ void loop() {
       Serial.println(uidText);
 
       // Danh sách UID hợp lệ
-      const char* validUIDs[] = {"UID:5A 73 3D 02", "UID:6F 0A 20 1F"};
-      const char* invalidUIDs[] = {"UID:FF 9B 57 1E", "UID:2C D1 45 03"};
+      const char* validUIDs[] = {"UID:5A 73 3D 02", "UID:6F 0A 20 1F", "UID:FF 9B 57 1E", "UID:D1 E1 FD 53" ,"UID:E1 64 A2 53"};
+      const char* invalidUIDs[] = {"UID:2C D1 45 03"};
       bool isValid = false;
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < 5; i++) {
         if (uidText == validUIDs[i]) {
           isValid = true;
           break;
@@ -433,7 +433,15 @@ void loop() {
 
       if (idx == -1) {
         // THẺ VÀO
-        if (addUID(uidText)) {
+        // Kiểm tra bãi đã đầy chưa
+        if (s1 && s2 && s3 && s4) {
+          // Bãi đầy, không mở cổng, còi kêu 3 bíp, LCD: Da het cho
+          beepStart(3, 150, 350); // 3 bíp trong 1.5s
+          printPadded(0, 0, uidText);
+          printPadded(0, 1, "Da het cho");
+          showingMsg = true;
+          msgUntil = millis() + MSG_MS;
+        } else if (addUID(uidText)) {
           beepStart(2, 80, 60);
           sendEvent(uidText, "IN", 0, 0);
           screenCardMsg(uidText, "Welcome");
